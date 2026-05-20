@@ -1,0 +1,2 @@
+"/** @type {import('tailwindcss').Config} */\nmodule.exports = {\n  content: [\"./index.html\", \"./js/**/*.js\"],\n  theme: {\n    extend: {\n      fontFamily: {\n        'sans': ['Noto Sans Thai', 'Inter', 'sans-serif'],\n      },\n      colors: {\n     
+<truncated 704 bytes>

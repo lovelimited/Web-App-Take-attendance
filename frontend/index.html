@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ระบบเช็คชื่อเข้าสอนและเก็บคะแนน สำหรับครูในโรงเรียน">
+  <title>ระบบเช็คชื่อเข้าสอน</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%233b82f6'/><stop offset='100%25' stop-color='%2322c55e'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)'/><path d='M30 25v50l20-10 20 10V25' fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/></svg>" type="image/svg+xml">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <link rel="stylesheet" href="css/tailwind.css">
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- SheetJS for Excel Export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css?v=8">
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+  <!-- ==================== LOADING OVERLAY ==================== -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] flex items-center justify-center hidden">
+    <div class="text-center">
+      <div class="loading-spinner mx-auto mb-4"></div>
+      <p class="text-gray-500 text-sm" id="loadingText">กำลังโหลด...</p>
+    </div>
+  </div>
+
+  <!-- ==================== LOGIN PAGE ==================== -->
+  <div id="loginPage" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 via-primary-600 to-green-500 p-4 hidden">
+    <div class="w-full max-w-md">
+      <div class="bg-white rounded-3xl shadow-2xl p-8 space-y-6 animate-fadeInUp">
+        <!-- Logo -->
+        <div class="text-center">
+          <img id="loginLogo" src="" alt="Logo" class="w-20 h-20 mx-auto mb-3 rounded-2xl object-cover hidden">
+          <div id="loginLogoPlaceholder" class="w-20 h-20 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-primary-500 to-green-500 flex items-center justify-center">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          </div>
+          <h1 id="loginSchoolName" class="text-xl font-bold text-gray-800">ระบบเช็คชื่อเข้าสอน</h1>
+          <p class="text-gray-400 text-sm mt-1">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
+        </div>
+
+        <!-- Form -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">ชื่อผู้ใช้</label>
+            <select id="loginUsername" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-gray-700">
+              <option value="">-- เลือกชื่อผู้ใช้ --</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">รหัสผ่าน</label>
+            <div class="relative">
+              <input id="loginPassword" type="password" placeholder="กรอกรหัสผ่าน" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-gray-700 pr-12">
+              <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+              </button>
+            </div>
+          </div>
+          <button id="loginBtn" onclick="handleLogin()" class="w-full py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl shadow-lg shadow-primary-200 transition-all duration-300 active:scale-[0.98]">
+            เข้าสู่ระบบ
+          </button>
+        </div>
+      </div>
+      <p class="text-center text-white/60 text-xs mt-6" id="loginFooter">© 2024 พัฒนาโดยทีมงาน IT</p>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN APP ==================== -->
+  <div id="mainApp" class="hidden">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full bg-white shadow-xl z-50 transition-all duration-300 sidebar-expanded flex flex-col">
+      <!-- Sidebar Header -->
+      <div class="sidebar-header p-4 border-b border-gray-100 flex items-center gap-3 min-h-[72px]">
+        
+        <!-- Logo Container with Hover Toggle Overlay -->
+        <div class="relative w-10 h-10 flex-shrink-0 group cursor-pointer" onclick="toggleSidebar()" title="ย่อ/ขยาย เมนู">
+          <img id="sidebarLogo" src="" alt="Logo" class="w-10 h-10 rounded-xl object-cover hidden">
+          <div id="sidebarLogoPlaceholder" class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-green-500 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          </div>
+          
+          <!-- Hover Overlay with < > Icon -->
+          <div class="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm border border-gray-200 z-10">
+            <svg id="toggleIcon" class="w-5 h-5 text-gray-700 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+          </div>
+        </div>
+
+        <div class="sidebar-text overflow-hidden whitespace-nowrap">
+          <h2 id="sidebarSchoolName" class="font-bold text-gray-800 text-sm leading-tight truncate">ระบบเช็คชื่อ</h2>
+          <p id="sidebarTeacherName" class="text-xs text-gray-400 truncate"></p>
+        </div>
+      </div>
+
+      <!-- Menu -->
+      <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <a href="#dashboard" class="menu-item" data-page="dashboard">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          <span class="sidebar-text">Dashboard</span>
+        </a>
+        <a href="#schedule" class="menu-item" data-page="schedule">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <span class="sidebar-text">ตารางสอน</span>
+        </a>
+        <a href="#attendance" class="menu-item" data-page="attendance">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+          <span class="sidebar-text">เช็คชื่อคาบสอน</span>
+        </a>
+        <a href="#scoring" class="menu-item" data-page="scoring">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          <span class="sidebar-text">เก็บคะแนน</span>
+        </a>
+        <a href="#reports" class="menu-item" data-page="reports">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span class="sidebar-text">รายงาน</span>
+        </a>
+        <a href="#settings" class="menu-item hidden" id="menuSettings" data-page="settings">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span class="sidebar-text">ตั้งค่า</span>
+        </a>
+        <div class="pt-2 border-t border-gray-100 mt-2">
+          <a href="#" onclick="handleLogout()" class="menu-item text-danger-500 hover:bg-danger-50">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            <span class="sidebar-text">ออกจากระบบ</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Sidebar Footer -->
+      <div class="p-3 border-t border-gray-100 sidebar-text">
+        <p class="text-[10px] text-gray-400 text-center leading-relaxed" id="sidebarFooter">พัฒนาโดยทีมงาน IT<br>v1.0.0</p>
+      </div>
+    </aside>
+
+    <!-- SIDEBAR TOGGLE BUTTON was moved into sidebar-header -->
+    
+    <!-- MOBILE OVERLAY -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black/30 z-40 hidden lg:hidden" onclick="closeMobileSidebar()"></div>
+
+    <!-- MAIN CONTENT -->
+    <main id="mainContent" class="transition-all duration-300 min-h-screen content-expanded">
+      <div class="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+        <div id="pageContent"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== TOAST CONTAINER ==================== -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-[10000] space-y-2"></div>
+
+  <!-- ==================== SCRIPTS ==================== -->
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/schedule.js"></script>
+  <script src="js/attendance.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

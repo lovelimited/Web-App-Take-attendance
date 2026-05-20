@@ -1,0 +1,2 @@
+"const fs = require('fs');\nconst path = require('path');\n\nconst logPath = 'C:/Users/KTW/.gemini/antigravity/brain/34a2ef6e-d384-4b8c-ab81-b5648e26570c/.system_generated/logs/overview.txt';\nconst logContent = fs.readFileSync(logPath, 'utf8');\n\nconst f
+<truncated 2280 bytes>
