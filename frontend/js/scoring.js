@@ -120,7 +120,13 @@ function renderScoreTable(students) {
   let wsHeaders = '', wsMaxInputs = '';
   for (let i = 1; i <= worksheetCount; i++) {
     const wsName = worksheetNames[i-1] || `งาน ${i}`;
-    wsHeaders += `<th class="!text-center !p-0" style="min-width:45px;max-width:55px"><input type="text" class="ws-name-input" id="wsName${i}" value="${escapeHtml(wsName)}" style="writing-mode:vertical-lr;transform:rotate(180deg);text-orientation:mixed;width:100%;border:none;background:transparent;text-align:center;font-size:0.7rem;font-weight:600;padding:6px 2px;outline:none;cursor:text;max-height:80px;overflow:hidden" onchange="recalcAll(true)"></th>`;
+    wsHeaders += `<th class="!text-center !p-0 ws-col" style="min-width:48px;max-width:60px;position:relative">
+      <div class="ws-actions">
+        <button onclick="addWorksheetAt(${i-1})" title="แทรกงานก่อนหน้า" class="ws-btn ws-btn-add">+</button>
+        <button onclick="removeWorksheetAt(${i-1})" title="ลบงานนี้" class="ws-btn ws-btn-del">✕</button>
+      </div>
+      <input type="text" class="ws-name-input" id="wsName${i}" value="${escapeHtml(wsName)}" style="writing-mode:vertical-lr;transform:rotate(180deg);text-orientation:mixed;width:100%;border:none;background:transparent;text-align:center;font-size:0.7rem;font-weight:600;padding:6px 2px;outline:none;cursor:text;max-height:80px;overflow:hidden" onchange="recalcAll(true)">
+    </th>`;
     wsMaxInputs += `<th class="!text-center !p-1"><input type="number" class="score-input !w-10 !p-0.5 text-center text-xs" id="maxScore${i}" value="${worksheetMaxScores[i-1] !== undefined ? worksheetMaxScores[i-1] : 10}" min="0" max="100" onchange="recalcAll(true)"></th>`;
   }
 
@@ -130,11 +136,11 @@ function renderScoreTable(students) {
       <div class="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-2">
           <span class="text-sm font-semibold text-gray-700">📋 จัดการงาน:</span>
-          <button onclick="addWorksheet()" class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all font-semibold text-xs flex items-center gap-1">➕ เพิ่มงาน</button>
-          <button onclick="removeWorksheet()" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all font-semibold text-xs flex items-center gap-1">➖ ลบงาน</button>
+          <button onclick="addWorksheetAtEnd()" class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all font-semibold text-xs flex items-center gap-1">➕ เพิ่มงาน</button>
         </div>
         <div class="text-xs text-gray-500">
           จำนวนงานปัจจุบัน: <span class="font-bold text-gray-700 text-sm" id="worksheetCountBadge">${worksheetCount}</span> ชิ้น
+          <span class="text-gray-400 ml-1">(ชี้ที่หัวคอลัมน์เพื่อ แทรก/ลบ)</span>
         </div>
       </div>
 
@@ -337,15 +343,21 @@ function calcGrade(score) {
   return 0;
 }
 
-function addWorksheet() {
+// เพิ่มงานที่ท้ายสุด
+function addWorksheetAtEnd() {
+  addWorksheetAt(worksheetCount);
+}
+
+// แทรกงานที่ตำแหน่ง index (0-based) — งานใหม่จะอยู่ตรง index นั้น
+function addWorksheetAt(index) {
   syncInputsToState();
   worksheetCount++;
-  worksheetMaxScores.push(10);
-  worksheetNames.push(`งาน ${worksheetCount}`);
+  worksheetMaxScores.splice(index, 0, 10);
+  worksheetNames.splice(index, 0, `งาน ${index + 1}`);
   if (scoringData && scoringData.students) {
     scoringData.students.forEach(st => {
       if (!st.worksheets) st.worksheets = [];
-      st.worksheets.push('');
+      st.worksheets.splice(index, 0, '');
     });
   }
   renderScoreTable(scoringData.students);
@@ -353,15 +365,22 @@ function addWorksheet() {
   scoringDirty = true;
 }
 
-function removeWorksheet() {
-  if (worksheetCount <= 1) return;
+// ลบงานที่ตำแหน่ง index (0-based)
+async function removeWorksheetAt(index) {
+  if (worksheetCount <= 1) {
+    showToast('ต้องมีอย่างน้อย 1 งาน', 'warning');
+    return;
+  }
+  const wsName = worksheetNames[index] || `งาน ${index + 1}`;
+  const ok = await showConfirm('ลบงาน', `ต้องการลบ "${wsName}" ใช่หรือไม่? คะแนนในคอลัมน์นี้จะถูกลบด้วย`, 'ลบ');
+  if (!ok) return;
   syncInputsToState();
   worksheetCount--;
-  worksheetMaxScores.pop();
-  worksheetNames.pop();
+  worksheetMaxScores.splice(index, 1);
+  worksheetNames.splice(index, 1);
   if (scoringData && scoringData.students) {
     scoringData.students.forEach(st => {
-      if (st.worksheets) st.worksheets.pop();
+      if (st.worksheets) st.worksheets.splice(index, 1);
     });
   }
   renderScoreTable(scoringData.students);

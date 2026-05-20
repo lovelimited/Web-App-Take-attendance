@@ -521,3 +521,52 @@ body {
   z-index: 11 !important;
   background: #f3f4f6 !important;
 }
+
+/* Worksheet column header — hover to show +/✕ */
+.ws-col {
+  transition: background 0.15s;
+}
+.ws-actions {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: flex;
+  gap: 2px;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.ws-col:hover .ws-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.ws-col:hover {
+  background: #eff6ff !important;
+}
+.ws-btn {
+  width: 17px;
+  height: 17px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  transition: transform 0.1s;
+}
+.ws-btn:hover {
+  transform: scale(1.2);
+}
+.ws-btn-add {
+  background: #3b82f6;
+  color: #fff;
+}
+.ws-btn-del {
+  background: #ef4444;
+  color: #fff;
+}
