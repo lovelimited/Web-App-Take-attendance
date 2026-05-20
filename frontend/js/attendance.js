@@ -7,6 +7,24 @@
 let attendanceData = null;
 let attendanceDirty = false;
 let currentScheduleId = null;
+let currentAttendanceDate = getTodayStr();
+
+window.changeAttendanceDate = function(dateStr) {
+  if (attendanceDirty) {
+    showConfirm('ข้อมูลยังไม่ถูกบันทึก', 'มีข้อมูลที่ยังไม่ได้บันทึก ต้องการเปลี่ยนวันที่และทิ้งการเปลี่ยนแปลงหรือไม่?').then(ok => {
+      if (ok) {
+        currentAttendanceDate = dateStr;
+        attendanceDirty = false;
+        renderAttendance();
+      } else {
+        document.getElementById('attendanceDateSelect').value = currentAttendanceDate;
+      }
+    });
+  } else {
+    currentAttendanceDate = dateStr;
+    renderAttendance();
+  }
+};
 
 async function renderAttendance(scheduleId) {
   const content = document.getElementById('pageContent');
@@ -18,8 +36,16 @@ async function renderAttendance(scheduleId) {
 
   content.innerHTML = `
     <div class="animate-fadeInUp space-y-6">
-      <h1 class="text-xl font-bold text-gray-800">เช็คชื่อคาบสอน</h1>
-      <p class="text-sm text-gray-400">${getThaiDay()} ${formatDateThai(getTodayStr())}</p>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-xl font-bold text-gray-800">เช็คชื่อคาบสอน</h1>
+          <p class="text-sm text-gray-400">${getThaiDay(currentAttendanceDate)} ${formatDateThai(currentAttendanceDate)}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-600">วันที่:</label>
+          <input type="date" id="attendanceDateSelect" value="${currentAttendanceDate}" onchange="changeAttendanceDate(this.value)" class="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:border-primary-500 outline-none cursor-pointer">
+        </div>
+      </div>
       <div id="attendanceCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <p class="text-gray-400 text-center py-8 col-span-full">กำลังโหลด...</p>
       </div>
@@ -27,7 +53,7 @@ async function renderAttendance(scheduleId) {
   `;
 
   // ใช้ cachedApiCall เพื่อแสดงข้อมูลจาก cache ทันทีและอัปเดตเบื้องหลัง
-  await cachedApiCall('getAttendanceCards', { date: getTodayStr() }, (data, fromCache) => {
+  await cachedApiCall('getAttendanceCards', { date: currentAttendanceDate }, (data, fromCache) => {
     if (currentPage !== 'attendance') return; // ⛔ ป้องกันเขียนทับหน้าอื่น
     const cards = data.cards || [];
     const container = document.getElementById('attendanceCards');
@@ -66,7 +92,7 @@ async function renderStudentAttendance(scheduleId) {
   const content = document.getElementById('pageContent');
   content.innerHTML = '<div class="text-center py-12 text-gray-400">กำลังโหลดรายชื่อนักเรียน...</div>';
 
-  const result = await callApi('getStudentsForAttendance', { scheduleId, date: getTodayStr() });
+  const result = await callApi('getStudentsForAttendance', { scheduleId, date: currentAttendanceDate });
   if (!result || !result.success) return;
 
   attendanceData = result.data;
@@ -163,6 +189,9 @@ function updateAttendanceSummary() {
 
 async function saveCurrentAttendance() {
   if (!attendanceData) return;
+  
+
+
   const records = attendanceData.students.filter(s => s.status).map(s => ({ studentId: s.studentId, status: s.status }));
   if (records.length === 0) {
     showToast('กรุณาเช็คชื่อนักเรียนก่อน', 'warning'); return;
@@ -172,7 +201,7 @@ async function saveCurrentAttendance() {
     const ok = await showConfirm('มีนักเรียนที่ยังไม่ได้เช็ค', `ยังเหลืออีก ${unchecked.length} คน ต้องการบันทึกหรือไม่?`, 'บันทึก');
     if (!ok) return;
   }
-  const result = await callApi('saveAttendance', { scheduleId: currentScheduleId, date: getTodayStr(), records });
+  const result = await callApi('saveAttendance', { scheduleId: currentScheduleId, date: currentAttendanceDate, records });
   if (result && result.success) {
     attendanceDirty = false;
     clearApiCache('getDashboardData');

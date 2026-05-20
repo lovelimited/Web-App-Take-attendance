@@ -112,6 +112,8 @@ async function handleLogout() {
     localStorage.removeItem('dashboard_cache');
     clearApiCache(); // เคลียร์ Cache ของ dropdown/ตารางสอนทั้งหมด
     
+    appProfile = null; // เคลียร์ Profile ออกจากหน่วยความจำ
+    
     showLoginPage();
   }
 }

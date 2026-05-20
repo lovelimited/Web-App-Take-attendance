@@ -23,7 +23,8 @@ function login(username, password) {
     const err = validateInput({ 'ชื่อผู้ใช้': username, 'รหัสผ่าน': password });
     if (err) return errorResponse(err);
 
-    // ดึงข้อมูลครูทั้งหมด
+    // ดึงข้อมูลครูทั้งหมด — เคลียร์ cache ก่อนเพื่อให้ได้ข้อมูลล่าสุดเสมอ
+    clearSheetCache('Teachers');
     const teachers = getSheetData('Teachers');
     const teacher = teachers.find(t =>
       String(t.username).trim() === String(username).trim()

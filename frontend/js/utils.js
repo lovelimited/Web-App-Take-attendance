@@ -204,9 +204,10 @@ function formatDateThai(dateStr) {
   return `${parseInt(parts[2])} ${months[parseInt(parts[1])-1]} ${parseInt(parts[0])+543}`;
 }
 
-function getThaiDay() {
+function getThaiDay(dateStr) {
   const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-  return days[new Date().getDay()];
+  const d = dateStr ? new Date(dateStr) : new Date();
+  return days[d.getDay()];
 }
 
 async function showConfirm(title, text, confirmButtonText = 'ตกลง') {
