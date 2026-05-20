@@ -133,13 +133,13 @@ function convertDriveUrl(url) {
   // Pattern: https://drive.google.com/file/d/FILE_ID/view
   let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (match) {
-    return 'https://drive.google.com/uc?export=view&id=' + match[1];
+    return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w1000';
   }
 
   // Pattern: https://drive.google.com/open?id=FILE_ID
   match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   if (match) {
-    return 'https://drive.google.com/uc?export=view&id=' + match[1];
+    return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w1000';
   }
 
   // ถ้าเป็น URL อื่นให้คืนค่าเดิม
