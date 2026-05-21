@@ -484,7 +484,7 @@ body {
 }
 #scoreTable thead tr:nth-child(2) td {
   position: sticky;
-  top: 41px; /* Height of row 1 th */
+  top: 100px; /* Height of row 1 th */
   z-index: 30;
   background: #f3f4f6 !important;
   box-shadow: inset 0 -2px 0 #e5e7eb, inset 0 1px 0 #e5e7eb;
@@ -512,12 +512,12 @@ body {
   position: sticky !important;
   top: 0 !important;
   z-index: 12 !important;
-  height: 48px !important;
+  height: 100px !important;
 }
 .score-table-container thead tr:nth-child(2) th,
 .score-table-container thead tr:nth-child(2) td {
   position: sticky !important;
-  top: 48px !important; /* height of row 1 th */
+  top: 100px !important; /* height of row 1 th */
   z-index: 11 !important;
   background: #f3f4f6 !important;
 }
